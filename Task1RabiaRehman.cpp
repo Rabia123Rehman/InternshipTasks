@@ -116,15 +116,13 @@ int _tmain(int argc, _TCHAR* argv[])
     cout << "Main Hard Disk Drive: " <<EnterHDD << " - " << hddDescriptions[EnterHDD == "C1" ? 0 : (EnterHDD == "C2" ? 1 : 2)] << endl;
 	cout<<"                         |TOTAL PRICE|                  "<<endl;
     cout << "Total Price: $" << totalPrice << endl;
-
-	// Task2 part(a)  Additional item selection
-        cout << "Do you want to purchase additional items? (Y/N): ";
+        cout << "Do you want to purchase items again? (Y/N): ";
         string additionalChoice;
         cin >> additionalChoice;
 
         if (additionalChoice == "Y" || additionalChoice == "y")
 		{
-            cout << "                         |ADDITIONAL ITEMS|                  " << endl;
+            cout << "                         |ITEMS|                  " << endl;
 			//CASE
 	while (true)
 	{
