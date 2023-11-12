@@ -1,0 +1,191 @@
+
+
+#include "stdafx.h"
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <limits>
+#include <algorithm>
+
+using namespace std;
+
+const int NUM_TRIPS = 4;
+const int NUM_COACHES = 6;
+const int SEATS_PER_COACH = 80;
+const int TICKET_PRICE = 25;
+const int FREE_TICKET_THRESHOLD = 10;
+
+int passengers_up[NUM_TRIPS] = {0};
+int passengers_down[NUM_TRIPS] = {0};
+int revenue_up[NUM_TRIPS] = {0};
+int revenue_down[NUM_TRIPS] = {0};
+
+int calculateFreeTickets(int numPassengers) {
+    return numPassengers / FREE_TICKET_THRESHOLD;
+}
+
+int getTotalSeats(int tripIndex, string direction) {
+    int extraCoaches = (tripIndex == NUM_TRIPS - 1 && direction == "down") ? 2 : 0;
+    return SEATS_PER_COACH * (NUM_COACHES + extraCoaches);
+}
+
+int getAvailableSeats(int tripIndex, string direction) {
+    int totalSeats = getTotalSeats(tripIndex, direction);
+    int occupiedSeatsUp = passengers_up[tripIndex];
+    int occupiedSeatsDown = passengers_down[tripIndex];
+
+    // Calculate available seats considering purchased tickets
+    int availableSeats = totalSeats - occupiedSeatsUp - occupiedSeatsDown;
+
+    // Ensure availableSeats is non-negative
+    availableSeats = max(0, availableSeats);
+
+    return availableSeats;
+}
+
+void displayAvailableTickets(int tripIndex, string direction) {
+    int availableSeats = getAvailableSeats(tripIndex, direction);
+
+    if (availableSeats > 0) {
+        cout << "Trip " << tripIndex + 1 << " " << direction << " - Tickets available: " << availableSeats << endl;
+    } else {
+        cout << "Trip " << tripIndex + 1 << " " << direction << " - Closed" << endl;
+    }
+}
+
+bool isSameDay(int travelDay) {
+    time_t t = time(0);
+    tm* now = localtime(&t);
+
+    return now->tm_mday == travelDay;
+}
+
+void purchaseTickets(int& passengers, int& revenue, int numPassengers, int tripIndex, string direction, int travelDay) {
+    if (!isSameDay(travelDay)) {
+        cout << "Tickets must be purchased on the day of travel. Exiting..." << endl;
+        exit(0); // Exit the program
+    }
+
+    int availableSeats = getAvailableSeats(tripIndex, direction);
+
+    if (numPassengers > availableSeats) {
+        cout << "Not enough tickets available for the requested number of passengers. Available tickets: " << availableSeats << endl;
+        return;
+    }
+
+    passengers += numPassengers;
+    int totalCost = numPassengers * TICKET_PRICE;
+    int discount = 0;
+
+    // Check if passengers are eligible for a discount
+    if (passengers % FREE_TICKET_THRESHOLD == 0) {
+        discount = (passengers / FREE_TICKET_THRESHOLD) * TICKET_PRICE;
+    } else {
+        cout << "No discount applied. Passengers are not eligible for a free ticket." << endl;
+    }
+
+    cout << "Tickets purchased successfully. Total cost: $" << totalCost
+         << " (Original cost: $" << (numPassengers * TICKET_PRICE) << ", Discount: $" << discount << " for " << min(passengers, FREE_TICKET_THRESHOLD) << " free ticket(s))" << endl;
+
+    int discountedPrice = totalCost - discount;
+    cout << "After Discounted price: Total cost is $" << discountedPrice << endl;
+
+    revenue += totalCost;
+
+    // Display available tickets
+    displayAvailableTickets(tripIndex, direction);
+}
+
+int main() {
+    cout << "Electric Mountain Railway - Start of the Day" << endl;
+    cout << "-------------------------------" << endl;
+    cout << "Train Schedule:" << endl;
+
+    // Define the train schedule with exact times
+    string departureTimes[] = {"09:00", "11:00", "13:00", "15:00"};
+    string returnTimes[] = {"10:00", "12:00", "14:00", "16:00"};
+
+    for (int i = 0; i < NUM_TRIPS; i++) {
+        cout << i + 1 << ". Departure: " << departureTimes[i] << ", Return: " << returnTimes[i] << endl;
+        displayAvailableTickets(i, "up");
+        displayAvailableTickets(i, "down");
+        cout << "-------------------------------" << endl;
+    }
+
+    int tripIndex, numPassengers, travelDay;
+    string direction;
+
+    // Define variables to keep track of the total number of passengers and total revenue for the day
+    int totalPassengers = 0;
+    int totalRevenue = 0;
+
+    while (true) {
+        cout << "Enter the trip number (1 to 4): ";
+        cin >> tripIndex;
+
+        if (tripIndex < 1 || tripIndex > NUM_TRIPS) {
+            cout << "Invalid trip number. Please enter a number between 1 and 4." << endl;
+            continue;
+        }
+
+        cout << "Enter the direction (up or down): ";
+        cin >> direction;
+
+        if (direction != "up" && direction != "down") {
+            cout << "Invalid direction. Please enter 'up' or 'down'." << endl;
+            continue;
+        }
+
+        cout << "Enter the travel day (1 to 31): ";
+        cin >> travelDay;
+
+        if (travelDay < 1 || travelDay > 31) {
+            cout << "Invalid travel day. Please enter a number between 1 and 31." << endl;
+            continue;
+        }
+
+        cout << "Enter the number of passengers: ";
+        cin >> numPassengers;
+
+        if (numPassengers <= 0) {
+            cout << "Invalid number of passengers. Please enter a positive integer." << endl;
+            continue;
+        }
+
+        int& passengers = (direction == "up") ? passengers_up[tripIndex - 1] : passengers_down[tripIndex - 1];
+        int& revenue = (direction == "up") ? revenue_up[tripIndex - 1] : revenue_down[tripIndex - 1];
+
+        purchaseTickets(passengers, revenue, numPassengers, tripIndex - 1, direction, travelDay);
+
+        // Update the total number of passengers and total revenue for the day
+        totalPassengers += numPassengers;
+        totalRevenue += revenue;
+
+        // Check if the user wants to continue purchasing tickets
+        cout << "Do you want to purchase more tickets? (yes/no): ";
+        string continuePurchase;
+        cin >> continuePurchase;
+
+        if (continuePurchase != "yes") {
+            break;
+        }
+    }
+
+    // Display the end-of-day summary
+    cout << "\nEnd of the Day Summary:" << endl;
+    cout << "Total number of passengers for the day: " << totalPassengers << endl;
+    cout << "Total revenue for the day: $" << totalRevenue << endl;
+
+    // Find and display the train journey with the most passengers
+    auto maxPassengersUp = max_element(passengers_up, passengers_up + NUM_TRIPS);
+    auto maxPassengersDown = max_element(passengers_down, passengers_down + NUM_TRIPS);
+
+    int maxPassengersTripUp = distance(passengers_up, maxPassengersUp) + 1;
+    int maxPassengersTripDown = distance(passengers_down, maxPassengersDown) + 1;
+
+    cout << "Train journey with the most passengers (Up): Trip " << maxPassengersTripUp << " - " << *maxPassengersUp << " passengers" << endl;
+    cout << "Train journey with the most passengers (Down): Trip " << maxPassengersTripDown << " - " << *maxPassengersDown << " passengers" << endl;
+
+    system("pause");
+    return 0;
+}
