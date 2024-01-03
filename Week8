@@ -1,0 +1,192 @@
+// Week8Task.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <ctime>
+#include <string>
+using namespace std;
+
+const double HOURLY_RATE = 20.0;
+const double HALF_HOUR_RATE = 12.0;
+const int RENTAL_START_TIME = 10;
+const int RENTAL_END_TIME = 17;
+
+class Boat {
+public:
+    int boatNumber;
+    double earnings;
+    double rentedHours;
+    int returnTime;
+    Boat(int number) : boatNumber(number), earnings(0.0), rentedHours(0.0), returnTime(0) {}
+    void calculateEarnings() {
+        cout << "\nBoat " << boatNumber << ":\n";
+        double duration;
+        double cost;
+        int rentalTime;
+
+        cout << "Enter the duration of rental (0.5 or 1) hour(s): ";
+        cin >> duration;
+
+        if (duration == 0.5 || duration == 1) {
+            cost = (duration == 0.5) ? HALF_HOUR_RATE : HOURLY_RATE;
+
+            cout << "Enter the time when the boat is rented (between 10 and 16): ";
+            cin >> rentalTime;
+
+            if (rentalTime >= RENTAL_START_TIME && rentalTime < RENTAL_END_TIME) {
+                earnings += cost;
+                rentedHours += duration;
+                returnTime = rentalTime + duration;
+
+                if (returnTime <= RENTAL_END_TIME) {
+                    cout << "Rented for " << duration << " hours starting at " << rentalTime << ":00.\n";
+                    cout << "Must be returned at " << returnTime << ":00.\n";
+                    cout << "Total cost: $" << cost << ".\n";
+                } else {
+                    cout << "Cannot be rented. Must be returned before 17:00.\n";
+                }
+            } else {
+                cout << "Cannot be rented before 10:00 or after 16:00.\n";
+            }
+        } else {
+            cout << "Invalid duration. Please enter 0.5 or 1.\n";
+        }
+    }
+
+    void displayBoatInfo() {
+        cout << "Boat " << boatNumber << ": $" << earnings << " (Total hours: " << rentedHours << ")\n";
+    }
+};
+
+int findNextAvailableBoat(const vector<Boat>& boats, int currentTime) {
+    int index = -1;
+    int availableBoats = 0;
+    int earliestReturnTime = RENTAL_END_TIME + 1;
+
+    for (int i = 0; i < boats.size(); i++) {
+        if (boats[i].returnTime <= currentTime) {
+            availableBoats++;
+
+            if (index == -1) {
+                index = i;
+            }
+        } else {
+            if (boats[i].returnTime < earliestReturnTime) {
+                earliestReturnTime = boats[i].returnTime;
+            }
+        }
+    }
+
+    cout << "Total available boats: " << availableBoats << "\n";
+
+    if (availableBoats == 0) {
+        cout << "The earliest time a boat will be available is " << earliestReturnTime << ":00.\n";
+    }
+
+    return index;
+}
+
+void calculateTotalEarningsAndUsage(const vector<Boat>& boats) {
+    double totalEarnings = 0.0;
+    double totalRentedHours = 0.0;
+    int unusedBoatsCount = 0;
+    int mostUsedBoatIndex = 0;
+
+    for (int i = 0; i < boats.size(); i++) {
+        totalEarnings += boats[i].earnings;
+        totalRentedHours += boats[i].rentedHours;
+
+        if (boats[i].rentedHours == 0) {
+            unusedBoatsCount++;
+        }
+
+        if (boats[i].rentedHours > boats[mostUsedBoatIndex].rentedHours) {
+            mostUsedBoatIndex = i;
+        }
+    }
+
+    cout << "\nEnd-of-Day Report:\n";
+    cout << "Total earnings: $" << totalEarnings << "\n";
+    cout << "Total hours rented: " << totalRentedHours << "\n";
+    cout << "Unused boats: " << unusedBoatsCount << "\n";
+    cout << "Most used boat: Boat " << boats[mostUsedBoatIndex].boatNumber << " with " << boats[mostUsedBoatIndex].rentedHours << " hours.\n";
+}
+
+void printMenu() {
+    cout << "\n";
+    cout << "\t\t**************************************************\n";
+    cout << "\t\t\t\tBoat Rental System Menu\n";
+    cout << "\t\t**************************************************\n";
+    cout << "\t\t| Option | Description                           |\n";
+    cout << "\t\t**************************************************\n";
+	cout << "\t\t|   1    | Rent a Boat                           |\n";
+    cout << "\t\t|   2    | Check End-of-Day Report               |\n";
+    cout << "\t\t|   3    | Exit                                  |\n";
+    cout << "\t\t**************************************************\n";
+    cout << "\t\tEnter your choice: ";
+}
+void printLine(char symbol, int width) 
+{
+    cout << "\t\t" << string(width, symbol) << endl;
+}
+
+int main() {
+    vector<Boat> boatList;
+	printLine('*', 50);
+    cout <<"\t\t\t Welcome to Boat Rental Syatem"<<endl;
+	printLine('-',50);
+    for (int i = 0; i < 10; i++) {
+        boatList.push_back(Boat(i + 1));
+    }
+
+    int userChoice;
+    int currentTime = 10;
+
+    do {
+        printMenu();
+        cin >> userChoice;
+
+        switch (userChoice) {
+            case 1:
+                cout << "\nAvailable Boats:\n";
+                for (int i = 0; i < boatList.size(); i++) {
+                    if (boatList[i].returnTime <= currentTime || boatList[i].returnTime == 0) {
+                        cout << "Boat " << boatList[i].boatNumber << "\n";
+                    }
+                }
+
+                cout << "Enter the number of the boat you want to rent (or enter -1 to go back to the menu): ";
+                cin >> userChoice;
+
+                if (userChoice >= 1 && userChoice <= boatList.size()) {
+                    cout << "Enter the current time (between 10 and 16): ";
+                    cin >> currentTime;
+                    boatList[userChoice - 1].calculateEarnings();
+                    boatList[userChoice - 1].displayBoatInfo();
+                } else if (userChoice != -1) {
+                    cout << "Invalid boat selection. Please choose a valid boat number.\n";
+                }
+                break;
+
+            case 2:
+                cout << "\nTask 3: Calculate the total earnings and usage statistics for all boats\n";
+                calculateTotalEarningsAndUsage(boatList);
+                break;
+
+            case 3:
+                cout << "\nThank you for using the Boat Rental System!\n";
+                break;
+
+            default:
+                cout << "Invalid choice. Please enter a valid option.\n";
+                break;
+        }
+
+    } while (userChoice != 3);
+
+    system("pause");
+    return 0;
+}
