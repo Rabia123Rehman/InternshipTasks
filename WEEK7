@@ -1,0 +1,121 @@
+// WEEK7TASK.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <algorithm>
+
+using namespace std;
+
+const int NUM_CHARITIES = 3;
+
+// Function to display available charities
+void displayCharities(const string charities[]) {
+    cout << "Available Charities:\n";
+    for (int i = 0; i < NUM_CHARITIES; ++i) {
+        cout << "Option " << i + 1 << ": " << charities[i] << "\n";
+    }
+}
+
+// Function to get a valid choice from the user
+int getValidChoice() {
+    int choice;
+    while (true) {
+        cout << "Please choose an option (1, 2, 3, or -1 to view totals): ";
+        cin >> choice;
+        if (choice >= -1 && choice <= NUM_CHARITIES) {
+            return choice;
+        } else {
+            cout << "Invalid choice. Please select 1, 2, 3, or -1.\n";
+        }
+    }
+}
+
+// Function to get the shopping bill amount from the user
+double getShoppingBill() {
+    double bill;
+    cout << "Enter the total amount of your shopping bill: $";
+    cin >> bill;
+    return bill;
+}
+
+// Function to record a donation for a selected charity
+void recordDonation(const string charities[], double totals[]) {
+    int choice = getValidChoice();
+
+    if (choice == -1) {
+        return; // exit the function if the user opts to view totals
+    }
+
+    double bill = getShoppingBill();
+    double donation = bill * 0.01;
+
+    // Update totals
+    totals[choice - 1] += donation;
+
+    // Output donation details
+    cout << "Thank you for contributing $" << fixed << setprecision(2) << donation
+         << " to " << charities[choice - 1] << ".\n";
+}
+
+// Function to display charity totals in descending order
+void showTotals(const string charities[], const double totals[]) {
+    cout << "Charity Donation Totals (in descending order):\n";
+
+    // Create a copy of indices for sorting
+    int indices[NUM_CHARITIES];
+    for (int i = 0; i < NUM_CHARITIES; ++i) {
+        indices[i] = i;
+    }
+
+    // Sort indices based on totals
+    sort(indices, indices + NUM_CHARITIES, [&](int a, int b) {
+        return totals[a] > totals[b];
+    });
+
+    for (int i = 0; i < NUM_CHARITIES; ++i) {
+        int index = indices[i];
+        cout << charities[index] << ": $" << fixed << setprecision(2) << totals[index] << "\n";
+    }
+}
+
+// Function to display the grand total donated to all charities
+void showGrandTotal(const double totals[]) {
+    double grandTotal = 0;
+    for (int i = 0; i < NUM_CHARITIES; ++i) {
+        grandTotal += totals[i];
+    }
+
+    cout << "GRAND TOTAL DONATED ACROSS ALL CHARITIES: $" << fixed << setprecision(2) << grandTotal << "\n";
+}
+
+int main() {
+    string charities[NUM_CHARITIES];
+    double totals[NUM_CHARITIES] = {0};
+
+    // Task 1: Set up the donation system
+    for (int i = 0; i < NUM_CHARITIES; ++i) {
+        cout << "Enter the name of Charity " << i + 1 << ": ";
+        cin >> charities[i];
+    }
+    int customerCount = 0;
+    while (true) {
+        cout << "Customer " << customerCount + 1 << ":\n";
+        recordDonation(charities, totals);
+
+        // Allow the user to enter -1 to view totals
+        int choice = getValidChoice();
+        if (choice == -1) {
+            showTotals(charities, totals);
+            showGrandTotal(totals);
+            break;
+        }
+        customerCount++;
+    }
+	system("pause");
+    return 0;
+}
+
+
